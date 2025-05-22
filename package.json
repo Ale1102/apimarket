@@ -1,7 +1,7 @@
 {
   "name": "apimarket",
   "version": "1.0.0",
-  "description": "",
+  "description": "API para el mercado, creada con Express y MySQL",
   "main": "index.js",
   "type": "module",
   "scripts": {
