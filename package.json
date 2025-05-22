@@ -2,14 +2,14 @@
   "name": "apimarket",
   "version": "1.0.0",
   "description": "API para el mercado, creada con Express y MySQL",
-  "main": "index.js",
+  "main": "src/sever.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["express", "mysql", "api", "nodejs"],
   "author": "",
   "license": "ISC",
   "dependencies": {
