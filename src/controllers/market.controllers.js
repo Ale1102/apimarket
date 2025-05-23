@@ -95,31 +95,58 @@ export const postProductos = async (req, res) => {
     }
 };
 
-// Actualizar producto (MANTENIENDO fototgrafia)
 export const putProductos = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, description, price_cost, price_sale, quantity, image } = req.body;
 
+        // 1. Validar datos requeridos
+        if (!name || !description || isNaN(price_cost) || isNaN(price_sale) || isNaN(quantity)) {
+            return res.status(400).json({ 
+                message: "Datos inválidos",
+                details: "Todos los campos son requeridos y los precios/cantidad deben ser números"
+            });
+        }
+
+        // 2. Verificar que el producto existe
+        const [product] = await pool.query("SELECT id FROM productos WHERE id = ?", [id]);
+        if (product.length === 0) {
+            return res.status(404).json({ message: `Producto con ID ${id} no encontrado` });
+        }
+
+        // 3. Actualizar (¡Asegúrate que los nombres coincidan con tu DB!)
         const [result] = await pool.query(
-            "UPDATE productos SET nombre = ?, descripcion = ?, precio_costo = ?, precio_venta = ?, cantidad = ?, fototgrafia = ? WHERE id = ?",
-            [name, description, price_cost, price_sale, quantity, image, id]
+            `UPDATE productos SET 
+                nombre = ?, 
+                descripcion = ?, 
+                precio_costo = ?, 
+                precio_venta = ?, 
+                cantidad = ?, 
+                fototgrafia = ? 
+             WHERE id = ?`,
+            [name, description, parseFloat(price_cost), parseFloat(price_sale), parseInt(quantity), image || "", id]
         );
 
+        // 4. Respuesta
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Producto no encontrado" });
+            return res.status(500).json({ message: "No se realizaron cambios" });
         }
-        
-        res.json({ 
-            message: "Producto actualizado exitosamente",
-            product: { id, name, description, price_cost, price_sale, quantity, image }
+
+        // Devuelve el producto actualizado
+        const [updatedProduct] = await pool.query("SELECT * FROM productos WHERE id = ?", [id]);
+        res.json({
+            message: "Producto actualizado con éxito",
+            product: updatedProduct[0]
         });
-        
+
     } catch (error) {
-        return res.status(500).json({ message: 'Error al actualizar el producto' });
+        console.error("Error completo:", error);
+        res.status(500).json({ 
+            message: "Error en el servidor",
+            error: error.message  // Esto muestra el error real (útil para depurar)
+        });
     }
 };
-
 // Eliminar producto
 export const deleteProductos = async (req, res) => {
     try {
