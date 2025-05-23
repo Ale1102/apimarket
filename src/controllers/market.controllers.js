@@ -50,31 +50,32 @@ export const getUsuario = async (req, res) => {
     }
   };
 
-  export const postProductos = async (req, res) => {
+ export const postProductos = async (req, res) => {
     try {
-    const { name, description, price_cost, price_sale, quantity, image } = req.body;
-    // 1. Consultamos el último ID en la base de datos
-    const [result] = await pool.query("SELECT MAX(id) AS last_id FROM productos");
-    // 2. Obtenemos el último ID y lo incrementamos
-    const lastId = result[0].last_id || 0; // Si no hay productos, el último ID será 0
-    const newId = lastId + 1; // Calculamos el nuevo ID
-    // 3. Insertamos el nuevo producto con el ID incrementado
-    const [insertResult] = await pool.query(
-     "INSERT INTO productos (id, nombre, descripcion, precio_costo, precio_venta, cantidad, fotografia) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [newId, name, description, price_cost, price_sale, quantity, image]
-    );
-    // 4. Verificamos si la inserción fue exitosa
-      if (insertResult.affectedRows > 0) {
-        res.json({ message: "Producto Agregado", id: newId });
-  }   else {
-        res.status(404).json({ message: "No se ingresó el producto" });
-  }
- }    catch (error) {
-        console.error(error);
-          return res.status(500).json({ message: 'Algo salió mal' });
- }
-};
+        const { name, description, price_cost, price_sale, quantity, image } = req.body;
 
+        // 1. Consultamos el último ID
+        const [result] = await pool.query("SELECT MAX(id) AS last_id FROM productos");
+        const lastId = result[0].last_id || 0;
+        const newId = lastId + 1;
+
+        // 2. Insertamos el nuevo producto (nombres de campos corregidos)
+        const [insertResult] = await pool.query(
+            "INSERT INTO productos (id, nombre, descripcion, precio_costo, precio_venta, cantidad, fototgrafia) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [newId, name, description, price_cost, price_sale, quantity, image || ""] // Si image es null, se envía ""
+        );
+
+        // 3. Respuesta
+        if (insertResult.affectedRows > 0) {
+            res.json({ message: "Producto Agregado", id: newId });
+        } else {
+            res.status(400).json({ message: "No se pudo agregar el producto" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error en el servidor" });
+    }
+};
   
 
 
