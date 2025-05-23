@@ -1,5 +1,5 @@
 import { pool } from '../db.js'
-import bcrypt from 'bcryptjs'; // Para comparar contraseñas hasheadas
+
 
 
 // Obtener todos los usuarios
@@ -12,25 +12,20 @@ export const getUsuarios = async (req, res) => {
     }
 };
 
-// Autenticar usuario (debería ser POST)
 export const getUsuario = async (req, res) => {
     try {
-        const { username, password } = req.body;
-        const [rows] = await pool.query(
-            "SELECT * FROM usuarios WHERE nombre = ? AND clave = ?", 
-            [username, password]
-        );
-        
-        if (rows.length <= 0) {
-            return res.status(404).json({ message: "Credenciales inválidas" });
-        }
-        
-        res.json({ message: "Autenticación exitosa", user: rows[0] });
-        
+      const { username, password } = req.body; 
+      const [rows] = await pool.query("SELECT * FROM usuarios WHERE nombre = ? AND clave = ?", [
+        username, password
+      ]);
+      if (rows.length <= 0) {
+        return res.status(404).json({ message: "Usuario no Encontrado" });
+      }
+      res.json({ message: "Encontrado" });
     } catch (error) {
-        return res.status(500).json({ message: 'Error en la autenticación' });
+      return res.status(500).json({ message: 'Algo salio mal'});
     }
-};
+  };
 // Obtener todos los productos
 export const getProductos = async (req, res) => {
     try {
