@@ -1,4 +1,6 @@
 import { pool } from '../db.js'
+import bcrypt from 'bcryptjs'; // Para comparar contraseñas hasheadas
+
 
 // Obtener todos los usuarios
 export const getUsuarios = async (req, res) => {
@@ -11,22 +13,50 @@ export const getUsuarios = async (req, res) => {
 };
 
 // Autenticar usuario (debería ser POST)
-export const getUsuario = async (req, res) => {
+
+export const loginUsuario = async (req, res) => {
     try {
         const { username, password } = req.body;
-        const [rows] = await pool.query(
-            "SELECT * FROM usuarios WHERE nombre = ? AND clave = ?", 
-            [username, password]
-        );
-        
-        if (rows.length <= 0) {
-            return res.status(404).json({ message: "Credenciales inválidas" });
+
+        // 1. Validar datos de entrada
+        if (!username || !password) {
+            return res.status(400).json({ message: "Usuario y contraseña son requeridos" });
         }
+
+        // 2. Buscar usuario en la base de datos
+        const [rows] = await pool.query(
+            "SELECT * FROM usuarios WHERE nombre = ?", 
+            [username]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        const usuario = rows[0];
+
+        // 3. Comparar contraseña con hash almacenado (asumiendo que 'clave' está hasheada)
+        const passwordMatch = await bcrypt.compare(password, usuario.clave);
         
-        res.json({ message: "Autenticación exitosa", user: rows[0] });
-        
+        if (!passwordMatch) {
+            return res.status(401).json({ message: "Credenciales inválidas" });
+        }
+
+        // 4. Eliminar datos sensibles antes de responder
+        delete usuario.clave;
+
+        // 5. Responder con datos del usuario
+        res.json({
+            message: "Autenticación exitosa",
+            usuario
+        });
+
     } catch (error) {
-        return res.status(500).json({ message: 'Error en la autenticación' });
+        console.error("Error en login:", error);
+        res.status(500).json({ 
+            message: "Error en el servidor",
+            error: error.message 
+        });
     }
 };
 
